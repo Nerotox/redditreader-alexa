@@ -14,7 +14,7 @@ Projektteam: Weiss Richard, Karrer Alexander, Jedinger Peter
 
 Wir wollen gemeinsam einen Alexa Skill programmieren, mit dem man sich Reddit Posts vorlesen und Bilder/GIFs am Echo Show/Spot Display anzeigen lassen kann.
 
-_Grundfunktionen_**:
+*Grundfunktionen*:
 
 Navigieren von Subreddits
 Vorlesen von Post Überschriften
@@ -22,7 +22,7 @@ Vorlesen von Text Posts
 Anzeigen von Image Posts
  
 
-_Weitere mögliche Features_**:
+*Weitere mögliche Features*:
 
 Vorlesen von Kommentaren
 Personalisierung durch Account-Verlinkung
