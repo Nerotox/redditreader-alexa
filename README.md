@@ -1,16 +1,16 @@
-# redditreader-alexa
+﻿# redditreader-alexa
 
 Alexander Karrer, Peter Jedinger und ich (Weiss Richard) möchten gerne einen Alexa Skill realisieren, mit dem man Reddit (Internetforum) per Spachsteuerung navigieren kann.
 
  
 
-**Wer**?
+**Wer?**
 
 Projektteam: Weiss Richard, Karrer Alexander, Jedinger Peter
 
  
 
-**Was**?
+**Was?**
 
 Wir wollen gemeinsam einen Alexa Skill programmieren, mit dem man sich Reddit Posts vorlesen und Bilder/GIFs am Echo Show/Spot Display anzeigen lassen kann.
 
