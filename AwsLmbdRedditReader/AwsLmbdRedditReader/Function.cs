@@ -18,10 +18,25 @@ namespace AwsLmbdRedditReader
     {
 
         ILambdaLogger log;
+        String currentSubreddit = "";
+        String currentPostSelfText = "";
+        int currentPostNumber = 1;
+
         public SkillResponse FunctionHandler(SkillRequest input, ILambdaContext context)
         {
 
            log = context.Logger;
+            Dictionary<String, object> sessionAttributes = input.Session.Attributes;
+            log.LogLine($"SessionAttributesContent: {sessionAttributes}");
+
+            if (sessionAttributes !=null )
+            {
+                currentSubreddit = (String) sessionAttributes["currentSubreddit"];
+                currentPostNumber = int.Parse((String) sessionAttributes["currentPostNumber"]);
+                currentPostSelfText = (String) sessionAttributes["currentPostSelfText"];
+                log.LogLine($"Input SessionAttributes = Subreddit: '{currentSubreddit}', Postnumber: '{currentPostNumber}'");
+            }
+
 
             SkillResponse response = null;
             
@@ -44,6 +59,7 @@ namespace AwsLmbdRedditReader
             else if (requestType == typeof(IntentRequest))
             {
                 var intentRequest = input.Request as IntentRequest;
+                String standardRepromptText = "Details, Continue or Back?";
 
                 switch (intentRequest.Intent.Name)
                 {
@@ -108,6 +124,7 @@ namespace AwsLmbdRedditReader
                         break;
                     case "ChooseSubreddit":
                         var subredditSlot = intentRequest.Intent.Slots["SubReddit"].Value;
+                        
 
                         var chooseSubredditTask = reddit.SearchSubreddits(subredditSlot, 1).First();
                         chooseSubredditTask.Wait();
@@ -115,15 +132,84 @@ namespace AwsLmbdRedditReader
                         log.LogLine($"Chosen Subreddit: {chosenSR}");
 
                         var postTask = chosenSR.GetPosts(1).First();
-                        var firstPost = postTask.Result;
+                        Post firstPost = postTask.Result;
+                        log.LogLine($"Post retrieved: {firstPost}");
 
-                        response = MakeSkillResponse($"{subredditSlot} is now selected. First post: {firstPost.Title}. About, Continue or Back?", false);
+                        //Store Session
+                        currentSubreddit = subredditSlot;
+                        currentPostNumber = 1;
+                        currentPostSelfText = firstPost.SelfText;
+
+                        response = MakeSkillResponse($"{subredditSlot} is now selected. " +
+                            $"First post: {firstPost.Title}. To navigate say details, continue, back or repeat.", false, standardRepromptText);
+                       
+
+                        response.SessionAttributes = new Dictionary<string, object>();
+                        response.SessionAttributes.Add("currentSubreddit", currentSubreddit);
+                        response.SessionAttributes.Add("currentPostNumber", currentPostNumber + "");
+                        response.SessionAttributes.Add("currentPostSelfText", currentPostSelfText);
+                        log.LogLine($"SessionAttributes IN ChooseSubreddit: \n {response.SessionAttributes}");
+
                         break;
-                    case "StepForward":
-                        String nextTitle = "Thunderstorm in Ohio";
-                        response = MakeSkillResponse($"{nextTitle}", false);
+                    case "NextPost":
+                        if (currentSubreddit.Equals(""))
+                        {
+                            String repromptText= "Please tell me which subreddit you want to browse.";
+                            response = MakeSkillResponse($"No subreddit selected. {repromptText}", false, repromptText);
+                        }
+                        else
+                        {
+                            var contSubredditTask = reddit.SearchSubreddits(currentSubreddit).First();
+                            contSubredditTask.Wait();
+                            Subreddit contSubreddit = contSubredditTask.Result;
+                            log.LogLine($"ContSubreddit Selected: {contSubreddit}");
+
+                            currentPostNumber++;
+
+                            Task<Post> contPostTask = contSubreddit.GetPosts(currentPostNumber).Last();
+                            Post contPost = contPostTask.Result;
+                            log.LogLine($"Post retrieved: {contPost}");
+                            currentPostSelfText = contPost.SelfText;
+
+                            response = MakeSkillResponse($"Next Post. {contPost.Title}.", false, standardRepromptText);
+
+                            //Store Session
+
+
+                            response.SessionAttributes = new Dictionary<string, object>();
+                            response.SessionAttributes.Add("currentSubreddit", currentSubreddit);
+                            response.SessionAttributes.Add("currentPostNumber", currentPostNumber + "");
+                            response.SessionAttributes.Add("currentPostSelfText", currentPostSelfText);
+                            log.LogLine($"SessionAttributes IN NextPost: \n {response.SessionAttributes}");
+                        }
+
+                        break;
+
+                    case "PreviousPost":
+
+                        response = MakeSkillResponse($"Previous Post", false);
                         //logic
                         break;
+                    case "AboutPost":
+                        if (currentSubreddit.Equals(""))
+                        {
+                            String repromptText = "Please tell me which subreddit you want to browse.";
+                            response = MakeSkillResponse($"No subreddit selected. {repromptText}", false, repromptText);
+                        }
+                        else
+                        {
+                            response = MakeSkillResponse($"{currentPostSelfText}.", false, standardRepromptText);
+
+                            //Store Session
+                            response.SessionAttributes = new Dictionary<string, object>();
+                            response.SessionAttributes.Add("currentSubreddit", currentSubreddit);
+                            response.SessionAttributes.Add("currentPostNumber", currentPostNumber + "");
+                            response.SessionAttributes.Add("currentPostSelfText", currentPostSelfText);
+                            log.LogLine($"SessionAttributes IN NextPost: \n {response.SessionAttributes}");
+                        }
+
+                        break;
+
                     case "AMAZON.StopIntent":
                         //stopping skill
                         response = MakeSkillResponse($"", true);
@@ -139,8 +225,8 @@ namespace AwsLmbdRedditReader
             }
             if (response == null)
             {
-                String errorreprompt = "Führe eine Aktion aus oder frage nach Hilfe";
-                response = MakeSkillResponse($"Anfrage wurde nicht verstanden. {errorreprompt}", false, errorreprompt);
+                String errorreprompt = "repeat yourself please.";
+                response = MakeSkillResponse($"Sorry. I didnt understand that, {errorreprompt}", false, errorreprompt);
             }
             return response;
         }
