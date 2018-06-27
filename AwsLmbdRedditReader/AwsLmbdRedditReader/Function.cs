@@ -13,7 +13,7 @@ using RedditSharp.Things;
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace AwsLmbdRedditReader
-{
+{ 
     public class Function
     {
 
