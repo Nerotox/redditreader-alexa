@@ -59,7 +59,7 @@ namespace AwsLmbdRedditReader
             else if (requestType == typeof(IntentRequest))
             {
                 var intentRequest = input.Request as IntentRequest;
-                String standardRepromptText = "Details, Continue or Back?";
+                String standardRepromptText = "Details, Next or Back?";
 
                 switch (intentRequest.Intent.Name)
                 {
@@ -141,7 +141,7 @@ namespace AwsLmbdRedditReader
                         currentPostSelfText = firstPost.SelfText;
 
                         response = MakeSkillResponse($"{subredditSlot} is now selected. " +
-                            $"First post: {firstPost.Title}. To navigate say details, continue, back or repeat.", false, standardRepromptText);
+                            $"First post: {firstPost.Title}. To navigate say details, next, back or repeat.", false, standardRepromptText);
                        
 
                         response.SessionAttributes = new Dictionary<string, object>();
@@ -186,9 +186,48 @@ namespace AwsLmbdRedditReader
                         break;
 
                     case "PreviousPost":
+                        if (currentSubreddit.Equals(""))
+                        {
+                            String repromptText = "Please tell me which subreddit you want to browse.";
+                            response = MakeSkillResponse($"No subreddit selected. {repromptText}", false, repromptText);
+                        }
+                        else
+                        {
+                            var backSubredditTask = reddit.SearchSubreddits(currentSubreddit).First();
+                            backSubredditTask.Wait();
+                            Subreddit backSubreddit = backSubredditTask.Result;
+                            log.LogLine($"BackSubreddit Selected: {backSubreddit}");
 
-                        response = MakeSkillResponse($"Previous Post", false);
-                        //logic
+                            String backIntro="";
+                            if(currentPostNumber > 1)
+                            {
+                                currentPostNumber--;
+                                backIntro = "Previous Post.";
+                            }
+                            else
+                            {
+                                currentPostNumber = 1;
+                                backIntro = "Can't go back any further.";
+                            }
+                            
+
+                            Task<Post> backPostTask = backSubreddit.GetPosts(currentPostNumber).Last();
+                            Post backPost = backPostTask.Result;
+                            log.LogLine($"Post retrieved: {backPost}");
+                            currentPostSelfText = backPost.SelfText;
+
+                            response = MakeSkillResponse($"{backIntro} {backPost.Title}.", false, standardRepromptText);
+
+                            //Store Session
+
+
+                            response.SessionAttributes = new Dictionary<string, object>();
+                            response.SessionAttributes.Add("currentSubreddit", currentSubreddit);
+                            response.SessionAttributes.Add("currentPostNumber", currentPostNumber + "");
+                            response.SessionAttributes.Add("currentPostSelfText", currentPostSelfText);
+                            log.LogLine($"SessionAttributes IN PreviousPost: \n {response.SessionAttributes}");
+                        }
+
                         break;
                     case "AboutPost":
                         if (currentSubreddit.Equals(""))
