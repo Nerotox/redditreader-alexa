@@ -54,7 +54,12 @@ namespace AwsLmbdRedditReader
 
             if (requestType == typeof(LaunchRequest))
             {
-                response = MakeSkillResponse($"Browse Reddit with your voice. Ask for news or tell me what subreddit you want to browse.", false);
+                if (input.Context.System.User.AccessToken == null) {
+                    LinkAccountCard lc = new LinkAccountCard();
+                    response = MakeSkillResponseWithLinkAccountCard($"Browse Reddit with your voice. Ask for news or tell me what subreddit you want to browse.", false, lc, "Use the help command if you want to know about all the navigation features.");
+                } else {
+                    response = MakeSkillResponse($"Browse Reddit with your voice. Ask for news or tell me what subreddit you want to browse.", false, "Use the help command if you want to know about all the navigation features.");
+                }
             }
             else if (requestType == typeof(IntentRequest))
             {
@@ -248,7 +253,9 @@ namespace AwsLmbdRedditReader
                         }
 
                         break;
-
+                    case "Help":
+                        response = HelpSkillResponse();
+                        break;
                     case "AMAZON.StopIntent":
                         //stopping skill
                         response = MakeSkillResponse($"", true);
@@ -319,6 +326,50 @@ namespace AwsLmbdRedditReader
             {
                 response.Card = card;
             }
+            return skillResponse;
+        }
+
+        private SkillResponse MakeSkillResponseWithLinkAccountCard(string outputSpeech,
+            bool shouldEndSession, LinkAccountCard card,
+            string repromptText = "Reprompt Text")
+        //change default reprompt text
+        {
+            var response = new ResponseBody
+            {
+                ShouldEndSession = shouldEndSession,
+                OutputSpeech = new PlainTextOutputSpeech { Text = outputSpeech }
+            };
+
+            if (repromptText != null)
+            {
+                response.Reprompt = new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = repromptText } };
+            }
+
+            var skillResponse = new SkillResponse
+            {
+                Response = response,
+                Version = "1.0"
+            };
+            if (card != null)
+            {
+                response.Card = card;
+            }
+            return skillResponse;
+        }
+
+        private SkillResponse HelpSkillResponse()
+        {
+            var response = new ResponseBody
+            {
+                ShouldEndSession = true,
+                OutputSpeech = new PlainTextOutputSpeech { Text = "If you want to get a news update say: Tell me the news. If you want to select a Subreddit to browse say: Browse and the Subreddit Name. If you want to navigate inside a subreddit, you can say Next post, Previous post or More info."}
+            };
+            var skillResponse = new SkillResponse
+            {
+                Response = response,
+                Version = "1.0"
+            };
+ 
             return skillResponse;
         }
 

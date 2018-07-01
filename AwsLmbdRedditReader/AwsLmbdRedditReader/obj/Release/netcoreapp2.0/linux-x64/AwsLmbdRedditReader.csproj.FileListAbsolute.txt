@@ -9,3 +9,14 @@ D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditRead
 D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.AssemblyInfo.cs
 D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.dll
 D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.pdb
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.deps.json
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.runtimeconfig.json
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.runtimeconfig.dev.json
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.dll
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.pdb
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.csprojAssemblyReference.cache
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.csproj.CoreCompileInputs.cache
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.AssemblyInfoInputs.cache
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.AssemblyInfo.cs
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.dll
+D:\Hagenberg\pro1\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Release\netcoreapp2.0\linux-x64\AwsLmbdRedditReader.pdb
