@@ -30,6 +30,7 @@ namespace AwsLmbdRedditReader
             String responseString = "These are the top three news posts on Reddit. ";
 
             var subredditTask = reddit.SearchSubreddits(SUBREDDIT_FOR_FLASHBRIEFING, 1).First();
+            
             subredditTask.Wait();
             var sr = subredditTask.Result;
             log.LogLine($"WorldNews Subreddit: {sr}");
@@ -204,9 +205,42 @@ namespace AwsLmbdRedditReader
 
 
             CurrentSession cs = new CurrentSession(log, subredditSlot, 1, firstPost.SelfText, firstPost.Title, true);
+            if (firstPost.IsStickied == true) {
+                return nextPost(cs); 
+            }
+            
 
             SkillResponse response = Function.MakeSkillResponse($"{subredditSlot} is now selected. " +
                 $"First post: {firstPost.Title}. To navigate say details, next, back or repeat.", false, BROWSING_REPROMPT_TEXT);
+
+            return new Tuple<SkillResponse, CurrentSession>(response, cs);
+        }
+
+        internal Tuple<SkillResponse, CurrentSession> randomPost()
+        {
+            Random getrandom = new Random();
+            var rnd = getrandom.Next(1, 249);
+            var chooseSubredditTask = reddit.SearchSubreddits("a", 1000);
+
+            var subreddit = chooseSubredditTask.ElementAt(rnd);
+            subreddit.Wait();
+            var chosenSR = subreddit.Result;
+            log.LogLine($"Chosen Subreddit: {chosenSR}");
+
+            var postTask = chosenSR.GetPosts(1).First();
+            Post firstPost = postTask.Result;
+            log.LogLine($"Post retrieved: {firstPost}");
+
+            CurrentSession cs = new CurrentSession(log, chosenSR.Name, 1, firstPost.SelfText, firstPost.Title, true);
+            if (firstPost.IsStickied == true)
+            {
+                return nextPost(cs);
+            }
+
+
+            SkillResponse response = Function.MakeSkillResponse($"{chosenSR} is now selected. " +
+                $"First post: {firstPost.Title}. To navigate say details, next or repeat.", false, BROWSING_REPROMPT_TEXT);
+
 
             return new Tuple<SkillResponse, CurrentSession>(response, cs);
         }

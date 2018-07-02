@@ -90,7 +90,11 @@ namespace AwsLmbdRedditReader
                     case "RepeatPost":
                         response = reddit.repeatPost(cs);
                         break;
-
+                    case "randomPost":
+                        Tuple<SkillResponse, CurrentSession> tRandom = reddit.randomPost();
+                        response = tRandom.Item1;
+                        cs = tRandom.Item2;
+                        break;
                     case "AMAZON.StopIntent":
                         //stopping skill
                         response = MakeSkillResponse($"", true);
@@ -102,7 +106,7 @@ namespace AwsLmbdRedditReader
                     case "AMAZON.HelpIntent":
                         response = MakeSkillResponse($"If you want to get a news update say: Tell me the news. " +
                             $"If you want to browse a Subreddit, say: " +
-                            $"Browse and the name of the subreddit.", false);
+                            $"Browse and the name of the subreddit. If you want a surprise, say: Tell me a random post.", false);
                         break;
                 }
             }
