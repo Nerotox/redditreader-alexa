@@ -20,6 +20,7 @@ namespace AwsLmbdRedditReader
         const String BROWSING_REPROMPT_TEXT = "Details, Next or Back?";
         const String NO_SUBREDDIT_SELECTED = "No subreddit selected.";
         const String NO_SUBREDDIT_SELECTED_REPROMPT = "Please tell me which subreddit you want to browse.";
+        const string RANDOM_REPROMPT_TEXT = "Say details for the text of this post or ask for another random post.";
 
         public RedditAccess(ILambdaLogger log)
         {
@@ -259,13 +260,13 @@ namespace AwsLmbdRedditReader
 
             int postNumber = 1;
 
-            var postTask = chosenSR.GetPosts(postNumber).First();
+            var postTask = chosenSR.GetPosts(postNumber).Last();
             Post firstPost = postTask.Result;
 
             while (firstPost.IsStickied)
             {
                 postNumber++;
-                postTask = chosenSR.GetPosts(postNumber).First();
+                postTask = chosenSR.GetPosts(postNumber).Last();
                 firstPost = postTask.Result;
             }
 
@@ -339,14 +340,14 @@ namespace AwsLmbdRedditReader
             log.LogLine($"Chosen Subreddit: {chosenSR}");
 
             int postNumber = 1;
-            var postTask = chosenSR.GetPosts(1).First();
+            var postTask = chosenSR.GetPosts(1).Last();
             Post firstPost = postTask.Result;
             log.LogLine($"Post retrieved: {firstPost}");
 
             while (firstPost.IsStickied)
             {
                 postNumber++;
-                postTask = chosenSR.GetPosts(postNumber).First();
+                postTask = chosenSR.GetPosts(postNumber).Last();
                 firstPost = postTask.Result;
             }
 
@@ -355,15 +356,15 @@ namespace AwsLmbdRedditReader
             SkillResponse response;
 
             List<IDirective> directives = getImageResponseIfUrlLeadsToImage(cs.url, cs.title);
-            String speechResponse = $"{firstPost.Title}. Say details for the text of this post or ask for another random post.";
+            String speechResponse = $"Random Post: {firstPost.Title}. {RANDOM_REPROMPT_TEXT}";
 
             if (directives != null)
             {
-                response = Function.MakeSkillResponseWithDirectives(speechResponse, false, directives, BROWSING_REPROMPT_TEXT);
+                response = Function.MakeSkillResponseWithDirectives(speechResponse, false, directives, RANDOM_REPROMPT_TEXT);
             }
             else
             {
-                response = Function.MakeSkillResponse(speechResponse, false, BROWSING_REPROMPT_TEXT);
+                response = Function.MakeSkillResponse(speechResponse, false, RANDOM_REPROMPT_TEXT);
             }
 
 
