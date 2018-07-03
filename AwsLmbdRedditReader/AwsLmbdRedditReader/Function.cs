@@ -35,27 +35,30 @@ namespace AwsLmbdRedditReader
             RedditAccess reddit = new RedditAccess(log);
             SkillResponse response = null;
 
-
             log.LogLine("FunctionHandler called");
 
-            var requestType = input.GetRequestType();
 
+            var requestType = input.GetRequestType();
             if (requestType == typeof(LaunchRequest))
             {
+
+                String launchRepromptText = "Ask for news or tell me what subreddit you want to browse.";
+                String launchText = $"Browse Reddit with your voice. {launchRepromptText}";
+
                 if (input.Context.System.User.AccessToken == null)
                 {
                     LinkAccountCard lc = new LinkAccountCard();
-                    response = MakeSkillResponseWithLinkAccountCard($"Browse Reddit with your voice. Ask for news or tell me what subreddit you want to browse.", false, lc, "Use the help command if you want to know about all the navigation features.");
+                    response = MakeSkillResponseWithLinkAccountCard(launchText, false, lc, launchRepromptText);
                 }
                 else
                 {
-                    response = MakeSkillResponse($"Browse Reddit with your voice. Ask for news or tell me what subreddit you want to browse.", false, "Use the help command if you want to know about all the navigation features.");
+                    response = MakeSkillResponse(launchText, false, launchRepromptText);
                 }
             }
             else if (requestType == typeof(IntentRequest))
             {
                 var intentRequest = input.Request as IntentRequest;
-
+                //IntenRequests are defined in the Amazon Developer Console and are used to handle custom input and behaviour
 
                 switch (intentRequest.Intent.Name)
                 {
@@ -81,7 +84,11 @@ namespace AwsLmbdRedditReader
                         response = tPreviousPost.Item1;
                         cs = tPreviousPost.Item2;
                         break;
-
+                    case "RandomPost":
+                        Tuple<SkillResponse, CurrentSession> tRandom = reddit.randomPost();
+                        response = tRandom.Item1;
+                        cs = tRandom.Item2;
+                        break;
                     case "AboutPost":
                         Tuple<SkillResponse, CurrentSession> tAboutPost = reddit.aboutPost(cs);
                         response = tAboutPost.Item1;
@@ -90,23 +97,16 @@ namespace AwsLmbdRedditReader
                     case "RepeatPost":
                         response = reddit.repeatPost(cs);
                         break;
-                    case "randomPost":
-                        Tuple<SkillResponse, CurrentSession> tRandom = reddit.randomPost();
-                        response = tRandom.Item1;
-                        cs = tRandom.Item2;
-                        break;
                     case "AMAZON.StopIntent":
-                        //stopping skill
                         response = MakeSkillResponse($"", true);
                         break;
                     case "AMAZON.CancelIntent":
-                        //stopping skill
                         response = MakeSkillResponse($"", true);
                         break;
                     case "AMAZON.HelpIntent":
                         response = MakeSkillResponse($"If you want to get a news update say: Tell me the news. " +
                             $"If you want to browse a Subreddit, say: " +
-                            $"Browse and the name of the subreddit. If you want a surprise, say: Tell me a random post.", false);
+                            $"Browse and the name of the subreddit.", false);
                         break;
                 }
             }
@@ -115,7 +115,7 @@ namespace AwsLmbdRedditReader
                 String errorreprompt = "repeat yourself please.";
                 response = MakeSkillResponse($"Sorry. I didnt understand that, {errorreprompt}", false, errorreprompt);
             }
-            if(cs != null)
+            if (cs != null)
             {
                 response.SessionAttributes = cs.storeSession();
             }
@@ -126,7 +126,6 @@ namespace AwsLmbdRedditReader
         public static SkillResponse MakeSkillResponse(string outputSpeech,
             bool shouldEndSession,
             string repromptText = "Reprompt Text")
-        //change default reprompt text
         {
             var response = new ResponseBody
             {
@@ -150,7 +149,6 @@ namespace AwsLmbdRedditReader
         public static SkillResponse MakeSkillResponseWithCard(string outputSpeech,
             bool shouldEndSession, StandardCard card,
             string repromptText = "Reprompt Text")
-        //change default reprompt text
         {
             var response = new ResponseBody
             {
@@ -175,10 +173,37 @@ namespace AwsLmbdRedditReader
             return skillResponse;
         }
 
+        public static SkillResponse MakeSkillResponseWithDirectives(string outputSpeech,
+    bool shouldEndSession, List<IDirective> directives,
+    string repromptText = "Reprompt Text")
+        {
+            var response = new ResponseBody
+            {
+                ShouldEndSession = shouldEndSession,
+                OutputSpeech = new PlainTextOutputSpeech { Text = outputSpeech }
+            };
+
+            if (repromptText != null)
+            {
+                response.Reprompt = new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = repromptText } };
+            }
+
+            var skillResponse = new SkillResponse
+            {
+                Response = response,
+                Version = "1.0"
+            };
+            if (directives != null)
+            {
+                response.Directives = directives;
+            }
+
+            return skillResponse;
+        }
+
         public static SkillResponse MakeSkillResponseWithLinkAccountCard(string outputSpeech,
     bool shouldEndSession, LinkAccountCard card,
     string repromptText = "Reprompt Text")
-        //change default reprompt text
         {
             var response = new ResponseBody
             {

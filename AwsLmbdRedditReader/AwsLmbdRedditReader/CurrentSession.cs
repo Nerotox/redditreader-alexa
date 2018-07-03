@@ -13,13 +13,14 @@ namespace AwsLmbdRedditReader
         public String selfText { get; set; }
         public String title { get; set; }
         public bool inTitleMode { get; set; }
+        public String url { get; set; }
 
         public CurrentSession(ILambdaLogger log)
         {
             this.log = log;
         }
 
-        public CurrentSession(ILambdaLogger log, String subreddit, int postNumber, String selfText, String title, bool inTitleMode)
+        public CurrentSession(ILambdaLogger log, String subreddit, int postNumber, String selfText, String title, bool inTitleMode, String url)
         {
             this.log = log;
             this.subreddit = subreddit;
@@ -27,6 +28,7 @@ namespace AwsLmbdRedditReader
             this.selfText = selfText;
             this.title = title;
             this.inTitleMode = inTitleMode;
+            this.url = url;
         }
 
         public Dictionary<string, object> storeSession()
@@ -37,6 +39,7 @@ namespace AwsLmbdRedditReader
             sessionAttributes.Add("currentPostSelfText", selfText);
             sessionAttributes.Add("currentPostTitle", title);
             sessionAttributes.Add("inTitleMode", inTitleMode);
+            sessionAttributes.Add("currentUrl", url);
             log.LogLine($"StoreSession CurrentSession = {this}");
 
             return sessionAttributes;
@@ -51,6 +54,7 @@ namespace AwsLmbdRedditReader
             cs.selfText = (String)sessionAttributes["currentPostSelfText"];
             cs.title = (String)sessionAttributes["currentPostTitle"];
             cs.inTitleMode = (bool)sessionAttributes["inTitleMode"];
+            cs.url = (String)sessionAttributes["currentUrl"];
             log.LogLine($"RetrieveSessionFromSessionAttributes CurrentSession = {cs}");
 
             return cs;
@@ -60,7 +64,7 @@ namespace AwsLmbdRedditReader
 
         public override string ToString()
         {
-            return $"Subreddit: {subreddit}, PostNumber = {postNumber}, Title = { title}, SelfText = {selfText}, inTitleMode= {inTitleMode}"; ;
+            return $"Subreddit: {subreddit}, PostNumber = {postNumber}, Title = { title}, SelfText = {selfText}, inTitleMode = {inTitleMode}, url = {url}";
         }
 
     }

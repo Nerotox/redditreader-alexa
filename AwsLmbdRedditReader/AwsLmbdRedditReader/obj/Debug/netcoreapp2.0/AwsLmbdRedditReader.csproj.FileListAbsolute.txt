@@ -1,0 +1,10 @@
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Debug\netcoreapp2.0\AwsLmbdRedditReader.deps.json
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Debug\netcoreapp2.0\AwsLmbdRedditReader.runtimeconfig.json
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Debug\netcoreapp2.0\AwsLmbdRedditReader.runtimeconfig.dev.json
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Debug\netcoreapp2.0\AwsLmbdRedditReader.dll
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\bin\Debug\netcoreapp2.0\AwsLmbdRedditReader.pdb
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Debug\netcoreapp2.0\AwsLmbdRedditReader.csproj.CoreCompileInputs.cache
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Debug\netcoreapp2.0\AwsLmbdRedditReader.AssemblyInfoInputs.cache
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Debug\netcoreapp2.0\AwsLmbdRedditReader.AssemblyInfo.cs
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Debug\netcoreapp2.0\AwsLmbdRedditReader.dll
+D:\Dokumente\FH Hagenberg\RedditReaderAlexa\redditreader-alexa\AwsLmbdRedditReader\AwsLmbdRedditReader\obj\Debug\netcoreapp2.0\AwsLmbdRedditReader.pdb

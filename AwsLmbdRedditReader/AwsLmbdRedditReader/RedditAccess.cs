@@ -6,6 +6,9 @@ using Amazon.Lambda.Core;
 using System.Linq;
 using RedditSharp.Things;
 using System.Threading.Tasks;
+using Alexa.NET.Response.Directive;
+using Alexa.NET.Response.Directive.Templates.Types;
+using Alexa.NET.Response.Directive.Templates;
 
 namespace AwsLmbdRedditReader
 {
@@ -30,7 +33,6 @@ namespace AwsLmbdRedditReader
             String responseString = "These are the top three news posts on Reddit. ";
 
             var subredditTask = reddit.SearchSubreddits(SUBREDDIT_FOR_FLASHBRIEFING, 1).First();
-            
             subredditTask.Wait();
             var sr = subredditTask.Result;
             log.LogLine($"WorldNews Subreddit: {sr}");
@@ -65,7 +67,8 @@ namespace AwsLmbdRedditReader
             StandardCard card = new StandardCard();
             card.Title = "The Top 3 News from Reddit";
 
-            String cardContent = $"{storedPosts[0].Title} (See more: {storedPosts[0].Url})\n\n" +
+            String cardContent = $"{storedPosts[0].Title} " +
+                $"(See more: {storedPosts[0].Url})\n\n" +
            $"{storedPosts[1].Title} (See more: {storedPosts[1].Url})\n\n" +
            $"{storedPosts[2].Title} (See more: {storedPosts[2].Url})";
             card.Content = cardContent;
@@ -97,8 +100,30 @@ namespace AwsLmbdRedditReader
             }
             else
             {
-                response = Function.MakeSkillResponse($"{cs.selfText}.", false, BROWSING_REPROMPT_TEXT);
-                cs.inTitleMode = false;
+
+                String speechResponse;
+                if (cs.selfText == "")
+                {
+                    speechResponse = $"There is no text attached to this post.";
+                    cs.inTitleMode = true;
+                }
+                else
+                {
+                    speechResponse = $"{cs.selfText}.";
+                    cs.inTitleMode = false;
+                }
+
+                List<IDirective> directives = getImageResponseIfUrlLeadsToImage(cs.url, cs.title);
+                if (directives != null)
+                {
+                    response = Function.MakeSkillResponseWithDirectives(speechResponse, false, directives, BROWSING_REPROMPT_TEXT);
+                }
+                else
+                {
+                    response = Function.MakeSkillResponse(speechResponse, false, BROWSING_REPROMPT_TEXT);
+                }
+
+
             }
             return new Tuple<SkillResponse, CurrentSession>(response, cs);
         }
@@ -112,13 +137,24 @@ namespace AwsLmbdRedditReader
             }
             else
             {
+                String speechResponse;
                 if (cs.inTitleMode)
                 {
-                    response = Function.MakeSkillResponse($"Repeating Post: { cs.title}", false, BROWSING_REPROMPT_TEXT);
+                    speechResponse = $"Repeating Post: {cs.title}";
                 }
                 else
                 {
-                    response = Function.MakeSkillResponse($"Repeating Details From Post: { cs.selfText}", false, BROWSING_REPROMPT_TEXT);
+                    speechResponse = $"Repeating Details From Post: {cs.selfText}";
+                }
+
+                List<IDirective> directives = getImageResponseIfUrlLeadsToImage(cs.url, cs.title);
+                if (directives != null)
+                {
+                    response = Function.MakeSkillResponseWithDirectives(speechResponse, false, directives, BROWSING_REPROMPT_TEXT);
+                }
+                else
+                {
+                    response = Function.MakeSkillResponse(speechResponse, false, BROWSING_REPROMPT_TEXT);
                 }
             }
             return response;
@@ -138,7 +174,7 @@ namespace AwsLmbdRedditReader
                 Subreddit backSubreddit = backSubredditTask.Result;
                 log.LogLine($"BackSubreddit Selected: {backSubreddit}");
 
-                String backIntro = "";
+                String backIntro;
                 if (cs.postNumber > 1)
                 {
                     cs.postNumber--;
@@ -156,8 +192,18 @@ namespace AwsLmbdRedditReader
                 cs.selfText = backPost.SelfText;
                 cs.title = backPost.Title;
                 cs.inTitleMode = true;
+                cs.url = backPost.Url.ToString();
 
-                response = Function.MakeSkillResponse($"{backIntro} {backPost.Title}.", false, BROWSING_REPROMPT_TEXT);
+                List<IDirective> directives = getImageResponseIfUrlLeadsToImage(cs.url, cs.title);
+                String speechResponse = $"{backIntro} {cs.title}.";
+                if (directives != null)
+                {
+                    response = Function.MakeSkillResponseWithDirectives(speechResponse, false, directives, BROWSING_REPROMPT_TEXT);
+                }
+                else
+                {
+                    response = Function.MakeSkillResponse(speechResponse, false, BROWSING_REPROMPT_TEXT);
+                }
             }
             return new Tuple<SkillResponse, CurrentSession>(response, cs);
         }
@@ -180,12 +226,24 @@ namespace AwsLmbdRedditReader
 
                 Task<Post> contPostTask = contSubreddit.GetPosts(cs.postNumber).Last();
                 Post contPost = contPostTask.Result;
+
                 log.LogLine($"Post retrieved: {contPost}");
                 cs.selfText = contPost.SelfText;
                 cs.title = contPost.Title;
                 cs.inTitleMode = true;
+                cs.url = contPost.Url.ToString();
 
-                response = Function.MakeSkillResponse($"Next Post. {cs.title}.", false, BROWSING_REPROMPT_TEXT);
+                List<IDirective> directives = getImageResponseIfUrlLeadsToImage(cs.url, cs.title);
+                String speechResponse = $"Next Post. {cs.title}.";
+                if (directives != null)
+                {
+                    response = Function.MakeSkillResponseWithDirectives(speechResponse, false, directives, BROWSING_REPROMPT_TEXT);
+                }
+                else
+                {
+                    response = Function.MakeSkillResponse(speechResponse, false, BROWSING_REPROMPT_TEXT);
+                }
+
             }
             return new Tuple<SkillResponse, CurrentSession>(response, cs);
 
@@ -199,21 +257,74 @@ namespace AwsLmbdRedditReader
             var chosenSR = chooseSubredditTask.Result;
             log.LogLine($"Chosen Subreddit: {chosenSR}");
 
-            var postTask = chosenSR.GetPosts(1).First();
+            int postNumber = 1;
+
+            var postTask = chosenSR.GetPosts(postNumber).First();
             Post firstPost = postTask.Result;
+
+            while (firstPost.IsStickied)
+            {
+                postNumber++;
+                postTask = chosenSR.GetPosts(postNumber).First();
+                firstPost = postTask.Result;
+            }
+
             log.LogLine($"Post retrieved: {firstPost}");
 
 
-            CurrentSession cs = new CurrentSession(log, subredditSlot, 1, firstPost.SelfText, firstPost.Title, true);
-            if (firstPost.IsStickied == true) {
-                return nextPost(cs); 
-            }
-            
+            CurrentSession cs = new CurrentSession(log, subredditSlot, postNumber, firstPost.SelfText, firstPost.Title, true, firstPost.Url.ToString());
 
-            SkillResponse response = Function.MakeSkillResponse($"{subredditSlot} is now selected. " +
-                $"First post: {firstPost.Title}. To navigate say details, next, back or repeat.", false, BROWSING_REPROMPT_TEXT);
+            SkillResponse response;
+
+            List<IDirective> directives = getImageResponseIfUrlLeadsToImage(cs.url, cs.title);
+            String speechResponse = $"{subredditSlot} is now selected. " +
+                $"First post: {firstPost.Title}. To navigate say details, next, back or repeat.";
+
+            if (directives != null)
+            {
+                response = Function.MakeSkillResponseWithDirectives(speechResponse, false, directives, BROWSING_REPROMPT_TEXT);
+            }
+            else
+            {
+                response = Function.MakeSkillResponse(speechResponse, false, BROWSING_REPROMPT_TEXT);
+            }
+
+
 
             return new Tuple<SkillResponse, CurrentSession>(response, cs);
+        }
+
+        internal List<IDirective> getImageResponseIfUrlLeadsToImage(String url, String title)
+        {
+            TemplateImage ti = new TemplateImage();
+            if (url.EndsWith(".png") || url.EndsWith(".jpg") || url.EndsWith(".jpeg"))
+            {
+                ImageSource imageSource = new ImageSource();
+                imageSource.Url = url;
+
+                log.LogLine($"Image detected: ImageURL = {url}");
+
+                ti.ContentDescription = title;
+
+                List<ImageSource> imageSources = new List<ImageSource>();
+                imageSources.Add(imageSource);
+                ti.Sources = imageSources;
+
+                var bodytemplate = new BodyTemplate7();
+                bodytemplate.Title = title;
+                bodytemplate.Image = ti;
+
+                DisplayRenderTemplateDirective directive = new DisplayRenderTemplateDirective();
+                directive.Template = bodytemplate;
+
+                List<IDirective> directives = new List<IDirective>();
+                directives.Add(directive);
+                return directives;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         internal Tuple<SkillResponse, CurrentSession> randomPost()
@@ -227,19 +338,33 @@ namespace AwsLmbdRedditReader
             var chosenSR = subreddit.Result;
             log.LogLine($"Chosen Subreddit: {chosenSR}");
 
+            int postNumber = 1;
             var postTask = chosenSR.GetPosts(1).First();
             Post firstPost = postTask.Result;
             log.LogLine($"Post retrieved: {firstPost}");
 
-            CurrentSession cs = new CurrentSession(log, chosenSR.Name, 1, firstPost.SelfText, firstPost.Title, true);
-            if (firstPost.IsStickied == true)
+            while (firstPost.IsStickied)
             {
-                return nextPost(cs);
+                postNumber++;
+                postTask = chosenSR.GetPosts(postNumber).First();
+                firstPost = postTask.Result;
             }
 
+            CurrentSession cs = new CurrentSession(log, chosenSR.Name, postNumber, firstPost.SelfText, firstPost.Title, true, firstPost.Url.ToString());
 
-            SkillResponse response = Function.MakeSkillResponse($"{chosenSR} is now selected. " +
-                $"First post: {firstPost.Title}. To navigate say details, next or repeat.", false, BROWSING_REPROMPT_TEXT);
+            SkillResponse response;
+
+            List<IDirective> directives = getImageResponseIfUrlLeadsToImage(cs.url, cs.title);
+            String speechResponse = $"{firstPost.Title}. Say details for the text of this post or ask for another random post.";
+
+            if (directives != null)
+            {
+                response = Function.MakeSkillResponseWithDirectives(speechResponse, false, directives, BROWSING_REPROMPT_TEXT);
+            }
+            else
+            {
+                response = Function.MakeSkillResponse(speechResponse, false, BROWSING_REPROMPT_TEXT);
+            }
 
 
             return new Tuple<SkillResponse, CurrentSession>(response, cs);
