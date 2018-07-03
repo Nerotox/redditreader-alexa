@@ -14,18 +14,21 @@ namespace AwsLmbdRedditReader
 {
     class RedditAccess
     {
+        //class for all reddit api querys
         Reddit reddit;
         ILambdaLogger log;
+        bool supportsDisplay;
         const String SUBREDDIT_FOR_FLASHBRIEFING = "worldnews";
         const String BROWSING_REPROMPT_TEXT = "Details, Next or Back?";
         const String NO_SUBREDDIT_SELECTED = "No subreddit selected.";
         const String NO_SUBREDDIT_SELECTED_REPROMPT = "Please tell me which subreddit you want to browse.";
         const string RANDOM_REPROMPT_TEXT = "Say details for the text of this post or ask for another random post.";
 
-        public RedditAccess(ILambdaLogger log)
+        public RedditAccess(ILambdaLogger log, bool supportsDisplay)
         {
             reddit = new Reddit();
             this.log = log;
+            this.supportsDisplay = supportsDisplay;
         }
 
 
@@ -298,34 +301,34 @@ namespace AwsLmbdRedditReader
         internal List<IDirective> getImageResponseIfUrlLeadsToImage(String url, String title)
         {
             TemplateImage ti = new TemplateImage();
-            if (url.EndsWith(".png") || url.EndsWith(".jpg") || url.EndsWith(".jpeg"))
+            if (supportsDisplay)
             {
-                ImageSource imageSource = new ImageSource();
-                imageSource.Url = url;
+                if (url.EndsWith(".png") || url.EndsWith(".jpg") || url.EndsWith(".jpeg"))
+                {
+                    ImageSource imageSource = new ImageSource();
+                    imageSource.Url = url;
 
-                log.LogLine($"Image detected: ImageURL = {url}");
+                    log.LogLine($"Image detected: ImageURL = {url}");
 
-                ti.ContentDescription = title;
+                    ti.ContentDescription = title;
 
-                List<ImageSource> imageSources = new List<ImageSource>();
-                imageSources.Add(imageSource);
-                ti.Sources = imageSources;
+                    List<ImageSource> imageSources = new List<ImageSource>();
+                    imageSources.Add(imageSource);
+                    ti.Sources = imageSources;
 
-                var bodytemplate = new BodyTemplate7();
-                bodytemplate.Title = title;
-                bodytemplate.Image = ti;
+                    var bodytemplate = new BodyTemplate7();
+                    bodytemplate.Title = title;
+                    bodytemplate.Image = ti;
 
-                DisplayRenderTemplateDirective directive = new DisplayRenderTemplateDirective();
-                directive.Template = bodytemplate;
+                    DisplayRenderTemplateDirective directive = new DisplayRenderTemplateDirective();
+                    directive.Template = bodytemplate;
 
-                List<IDirective> directives = new List<IDirective>();
-                directives.Add(directive);
-                return directives;
+                    List<IDirective> directives = new List<IDirective>();
+                    directives.Add(directive);
+                    return directives;
+                }
             }
-            else
-            {
                 return null;
-            }
         }
 
         internal Tuple<SkillResponse, CurrentSession> randomPost()

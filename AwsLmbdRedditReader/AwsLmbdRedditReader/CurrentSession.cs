@@ -6,6 +6,8 @@ namespace AwsLmbdRedditReader
 {
     class CurrentSession
     {
+        //object used to store session attributes during a dialog with alexa
+
         ILambdaLogger log;
 
         public String subreddit { get; set; }

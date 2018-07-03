@@ -16,7 +16,7 @@ namespace AwsLmbdRedditReader
 {
     public class Function
     {
-
+        //main class. entry point when lambda function is called. handles the different incoming intents
         ILambdaLogger log;
         CurrentSession cs;
 
@@ -27,12 +27,16 @@ namespace AwsLmbdRedditReader
             Dictionary<String, object> sessionAttributes = input.Session.Attributes;
             log.LogLine($"SessionAttributesContent: {sessionAttributes}");
 
+            
             if (sessionAttributes != null)
             {
                 cs = CurrentSession.retrieveCurrentSessionFromSessionAttributes(log, sessionAttributes);
             }
 
-            RedditAccess reddit = new RedditAccess(log);
+            //checks if the client supports display output 
+            bool supportsDisplay = input.Context.System.Device.SupportedInterfaces.ContainsKey("Display");
+
+            RedditAccess reddit = new RedditAccess(log, supportsDisplay);
             SkillResponse response = null;
 
             log.LogLine("FunctionHandler called");
@@ -41,7 +45,7 @@ namespace AwsLmbdRedditReader
             var requestType = input.GetRequestType();
             if (requestType == typeof(LaunchRequest))
             {
-
+                //launchrequest is called when the user starts the skill - "alexa, start reddit reader"
                 String launchRepromptText = "Ask for news or tell me what subreddit you want to browse.";
                 String launchText = $"Browse Reddit with your voice. {launchRepromptText}";
 
